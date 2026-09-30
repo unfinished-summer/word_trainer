@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "word-trainer",
+      "displayName": "word-trainer",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "word-trainer",
+      "configurePreset": "word-trainer"
+    }
+  ]
+}
