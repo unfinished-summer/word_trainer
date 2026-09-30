@@ -34,8 +34,14 @@ int manageMode() {
         }
         else if (cmd == "add") {
             Word w;
-            cout << "英文：";
-            cin >> w.english;
+            cout << "英文（词组用空格分隔）：";
+            cin.ignore();                    // 清掉上次 cin >> cmd 留下的回车
+            getline(cin, w.english);         // 读整行，含空格 ✓
+
+            if (w.english.empty()) {
+                cout << "英文不能为空，已取消" << endl;
+                continue;
+            }
 
             // 闸门：先查重（输入完英文立刻查）
             bool exists = false;
