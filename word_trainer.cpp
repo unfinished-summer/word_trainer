@@ -15,7 +15,7 @@ int main(int argc,char* argv[])
 {
     system("chcp 65001");
 
-    // 没有参数：默认进入背词模式（先占位）
+    // 没有参数：默认进入背词模式
     if (argc == 1) {
         return playMode();
     }
