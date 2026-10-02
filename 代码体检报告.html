@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>词卡背单词 代码体检报告</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='4' width='18' height='16' rx='2' fill='%234F6B9A'/%3E%3Cpath d='M7 9h10M7 13h6' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#FAFAF7; --ink:#1A1B1C; --sub:#5F6670; --line:#E4E3DD;
+    --p0:#A14E50; --p1:#9A6A2F; --p2:#4F6B9A; --p3:#6B7280;
+    --p0bg:#FBEFEF; --p1bg:#FBF3E8; --p2bg:#EEF3F9; --p3bg:#F1F2F4;
+    --mono:Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:15px/1.75 "Microsoft YaHei","PingFang SC",sans-serif;padding:32px 20px}
+  .wrap{max-width:960px;margin:0 auto}
+
+  /* 头部 */
+  .head{border-bottom:3px solid var(--ink);padding-bottom:20px;margin-bottom:28px}
+  .head .kicker{font-size:13px;letter-spacing:.12em;color:var(--sub);margin-bottom:8px}
+  .head h1{font-size:30px;line-height:1.3;letter-spacing:.02em}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:14px;color:var(--sub);font-size:13px}
+  .meta b{color:var(--ink);font-weight:600}
+
+  /* 摘要 */
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:32px}
+  .sum-card{border:1px solid var(--line);border-radius:8px;padding:16px 18px;background:#fff}
+  .sum-card .n{font-size:26px;font-weight:700;line-height:1.2}
+  .sum-card .t{font-size:13px;color:var(--sub);margin-top:4px}
+  .sum-card.c0 .n{color:var(--p0)} .sum-card.c1 .n{color:var(--p1)}
+  .sum-card.c2 .n{color:var(--p2)} .sum-card.c3 .n{color:var(--p3)}
+
+  .verdict{background:#fff;border:1px solid var(--line);border-left:4px solid var(--p2);border-radius:8px;padding:16px 20px;margin-bottom:32px;font-size:14px}
+  .verdict b{color:var(--p2)}
+
+  /* 章节 */
+  h2{font-size:20px;margin:36px 0 16px;padding-left:12px;border-left:4px solid var(--ink);letter-spacing:.02em}
+  h3{font-size:15px;margin:18px 0 8px}
+
+  /* 发现条目 */
+  .issue{border:1px solid var(--line);border-radius:8px;background:#fff;padding:18px 20px;margin-bottom:14px}
+  .issue .top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px}
+  .badge{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;letter-spacing:.04em}
+  .b0{background:var(--p0bg);color:var(--p0)} .b1{background:var(--p1bg);color:var(--p1)}
+  .b2{background:var(--p2bg);color:var(--p2)} .b3{background:var(--p3bg);color:var(--p3)}
+  .issue .no{font-weight:700;color:var(--sub);font-size:13px}
+  .issue .title{font-weight:700;font-size:15.5px}
+  .pos{font-family:var(--mono);font-size:12.5px;color:var(--sub);background:#F4F4F1;border-radius:4px;padding:1px 8px}
+  .issue .row{margin:6px 0;display:grid;grid-template-columns:44px 1fr;gap:4px 8px;align-items:baseline}
+  .issue .lab{font-weight:700;color:var(--sub);font-size:12.5px}
+  .issue .body{min-width:0;font-size:14px}
+  code{font-family:var(--mono);font-size:13px;background:#F4F4F1;border-radius:4px;padding:1px 6px;color:#3B4252;overflow-wrap:anywhere;word-break:break-word}
+  .risky{color:var(--p0);font-weight:600}
+
+  /* 亮点 */
+  .good{border:1px solid #CFE3D6;background:#F2F8F4;border-radius:8px;padding:16px 20px;margin-bottom:12px}
+  .good .gtitle{font-weight:700;color:#2F6B4F;margin-bottom:6px}
+  .good p{font-size:14px;color:#33503F}
+
+  /* 文件表 */
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;table-layout:fixed;margin-bottom:16px}
+  colgroup col:nth-child(1){width:26%} colgroup col:nth-child(2){width:12%}
+  colgroup col:nth-child(3){width:16%} colgroup col:nth-child(4){width:46%}
+  th,td{padding:10px 14px;text-align:left;vertical-align:top;font-size:13.5px;border-bottom:1px solid var(--line)}
+  th{background:#F1F1ED;font-weight:700;font-size:12.5px;letter-spacing:.04em}
+  tr:last-child td{border-bottom:none}
+  td.mono,th.mono{font-family:var(--mono)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+  /* 路线图 */
+  .road{list-style:none;counter-reset:step}
+  .road li{counter-increment:step;position:relative;padding:0 0 18px 46px}
+  .road li::before{content:counter(step);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+  .road li::after{content:"";position:absolute;left:14px;top:34px;bottom:0;width:2px;background:var(--line)}
+  .road li:last-child::after{display:none}
+  .road .rt{font-weight:700;margin-bottom:4px}
+  .road .rd{font-size:13.5px;color:var(--sub)}
+
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--sub);font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 20px}
+
+  @media (max-width:640px){
+    body{padding:20px 12px;font-size:16px}
+    .head h1{font-size:24px}
+    .issue{padding:14px 14px}
+    .issue .row{font-size:15px;grid-template-columns:40px 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 头部 ===== -->
+  <div class="head">
+    <div class="kicker">CODE REVIEW REPORT · 只报告不改动</div>
+    <h1>词卡背单词（word-trainer）代码体检报告</h1>
+    <div class="meta">
+      <span>检查日期 <b>2026-09-30</b></span>
+      <span>检查范围 <b>8 个源/头文件 + CMake + words.csv</b></span>
+      <span>技术栈 <b>C++20 · raylib · CMake/Ninja</b></span>
+      <span>状态 <b>V1.5 收官 · V2.0 待开发</b></span>
+    </div>
+  </div>
+
+  <!-- ===== 摘要 ===== -->
+  <div class="summary">
+    <div class="sum-card c0"><div class="n">3</div><div class="t">P0 崩溃级：先修，会崩或坏数据</div></div>
+    <div class="sum-card c1"><div class="n">4</div><div class="t">P1 功能缺陷：该修，影响使用</div></div>
+    <div class="sum-card c2"><div class="n">5</div><div class="t">P2 规范隐患：值得改</div></div>
+    <div class="sum-card c3"><div class="n">2</div><div class="t">P3 待办/环境</div></div>
+  </div>
+
+  <div class="verdict">
+    总体评价：<b>架构和核心逻辑是健康的</b>（模块分层、间隔重复闭环、due 下标清单都做得对）。
+    主要风险集中在<b>数据解析的健壮性</b>——csv 一旦出现空行、BOM、脏数据，程序可能直接崩溃或静默吞掉词库。
+    建议按路线图先修 P0 三项，再补 P1。
+  </div>
+
+  <!-- ===== 发现清单 ===== -->
+  <h2>一、发现的问题（按严重度排序）</h2>
+
+  <div class="issue">
+    <div class="top"><span class="badge b0">P0 崩溃</span><span class="no">#1</span><span class="title">parseLine 遇空行/脏数据直接崩溃</span><span class="pos">wordbank.cpp:4-21</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">csv 末尾空行、缺字段的行、或手误输错的脏行，会让 <code>stoi("")</code> 抛 <code>std::invalid_argument</code> 异常，程序直接崩溃。</span></div>
+    <div class="row"><span class="lab">原因</span><span class="body"><code>line.find(',')</code> 找不到逗号时返回 <code>npos</code>（超大值），<code>substr</code> 拿不到预期片段，<code>stoi</code> 收到空串。且 <code>parseLine</code> 永远返回 <code>true</code>，从不拒收坏行。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">解析前校验：<code>pos == string::npos</code> 直接 <code>return false</code>；每个字段 <code>substr</code> 后检查非空；<code>stoi</code> 包 try-catch 或用 <code>from_chars</code>。空行在 loadWords 里 <code>if (line.empty()) continue;</code>。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b0">P0 坏数据</span><span class="no">#2</span><span class="title">UTF-8 BOM 未处理，编辑器保存即坏首行</span><span class="pos">wordbank.cpp loadWords</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">用 VS 等编辑器保存 csv 会写入 3 个隐藏字节 <code>EF BB BF</code>，第一行第一个词（english）带上看不见的前缀，查重、删除、匹配全部失败。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">loadWords 读每行时检测并跳过 BOM：<code>if (line[0]==0xEF && line[1]==0xBB && line[2]==0xBF) line = line.substr(3);</code>——一劳永逸，任何编辑器都不怕。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b0">P0 静默失败</span><span class="no">#3</span><span class="title">loadWords / saveWords 返回值被忽略</span><span class="pos">ui.cpp:17 · console.cpp:19</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body"><code>loadWords(csvPath, words)</code> 的 bool 返回值从不检查——文件丢失/打不开时静默得到空词库，用户看到"今天没有要背的词"误以为数据丢了。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">调用处检查返回值，失败时明确提示"词库文件读取失败：路径"并退出；<code>saveWords</code> 失败也应提示（磁盘满/只读时数据会悄悄丢）。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b1">P1 功能</span><span class="no">#4</span><span class="title">remove 无法删除词组（空格截断）</span><span class="pos">console.cpp:72</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body"><code>cin &gt;&gt; target</code> 遇空格即停——想删 <code>checks and balances</code> 只会匹配到 <code>checks</code>，永远"没找到"。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">和 add 一样换 <code>getline</code>（记得先 <code>cin.ignore()</code> 清残留回车）。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b1">P1 交互</span><span class="no">#5</span><span class="title">未知命令行参数静默退出</span><span class="pos">word_trainer.cpp:28</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">敲 <code>word-trainer.exe --abc</code> 直接无声退出，用户不知道发生了什么。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">加 <code>else</code> 分支打印用法：<code>用法: word-trainer [--manage] [--quiz]</code>。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b1">P1 资源</span><span class="no">#6</span><span class="title">LoadFontEx 后未 UnloadFont</span><span class="pos">ui.cpp:38</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">字体加载后没有 <code>UnloadFont(zh)</code>——虽然退出时系统回收，但资源管理不规范，将来加"重载字体"功能会泄漏。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">循环退出后、<code>CloseWindow()</code> 前补 <code>UnloadFont(zh)</code>。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b1">P1 路径</span><span class="no">#7</span><span class="title">字体字库路径硬编码 + 未判空</span><span class="pos">ui.cpp:35</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body"><code>C:\Users\36779\OneDrive\Desktop\common_chars.txt</code> 写死——换机器、换用户名、换目录直接找不到；<code>LoadFileText</code> 返回 <code>nullptr</code> 时未检查，<code>LoadCodepoints</code> 会拿到空指针。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">字库文件随程序分发（放到源码目录或资源目录，用 <code>cppDir()</code> 拼路径），并判空提示。这是你 <code>words.csv</code> 修好的同款问题，字体也该享受同等待遇。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b2">P2 规范</span><span class="no">#8</span><span class="title">头文件里 using namespace std</span><span class="pos">word.h:3</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">头文件写 <code>using namespace std;</code> 会把 std 全部塞进每个 include 它的文件的全局命名空间——名字冲突的定时炸弹。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">头文件里写 <code>std::string</code> 全限定；<code>using</code> 只放在 .cpp 里。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b2">P2 规范</span><span class="no">#9</span><span class="title">parseLine 的 pos-0 怪写法 + 无字段数校验</span><span class="pos">wordbank.cpp:7</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body"><code>substr(0, pos-0)</code> 的 <code>-0</code> 是无意义的装饰写法；且没有校验一行到底有几个字段。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">写成 <code>substr(0, pos)</code>；解析完检查 5 个字段齐全，缺一个就 <code>return false</code>。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b2">P2 隐患</span><span class="no">#10</span><span class="title">两份 words.csv 不同步</span><span class="pos">CMakeLists.txt:24</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body"><code>configure_file</code> 把 csv 复制到构建目录，但程序 <code>cppDir()</code> 读的是源目录——构建目录那份永远是"构建时的快照"，改词后两边不一致，容易让人困惑"读的是哪个"（你今天就踩到了）。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">二选一：删掉 <code>configure_file</code>（程序统一读源目录）；或程序改成读 exe 目录（<code>argv[0]</code> 定位）并保留复制。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b2">P2 规范</span><span class="no">#11</span><span class="title">头文件依赖传递（不自给自足）</span><span class="pos">wordbank.h:2-4</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">wordbank.h 用了 <code>string/vector/fstream</code> 却没 include，靠 word.h 碰巧带进来——将来 word.h 一改，编译就断。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">每个头文件 include 自己用到的所有头（<code>&lt;string&gt; &lt;vector&gt; &lt;fstream&gt;</code>）。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b2">P2 重复</span><span class="no">#12</span><span class="title">csvPath 拼接逻辑重复两处</span><span class="pos">ui.cpp:16 · console.cpp:17</span></div>
+    <div class="row"><span class="lab">现象</span><span class="body">两个文件各自写一遍 <code>(fs::path(cppDir()) / "words.csv").string()</code>。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">在 path_util 加 <code>wordsCsvPath()</code> 返回统一路径——以后换存储位置只改一处。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b3">P3 待办</span><span class="no">#13</span><span class="title">V2.0 答题模式未实现</span><span class="pos">word_trainer.cpp · quiz 缺失</span></div>
+    <div class="row"><span class="lab">现状</span><span class="body">需求文档已定（7 步），main 里还没有 <code>--quiz</code> 分支，CMakeLists 也没有 quiz.cpp。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">按 <code>word-trainer-V2.0需求与开发步骤.md</code> 逐步实现；登记新文件记得改 CMakeLists 的 add_executable。</span></div>
+  </div>
+
+  <div class="issue">
+    <div class="top"><span class="badge b3">P3 环境</span><span class="no">#14</span><span class="title">控制台中文输入乱码（环境问题）</span><span class="pos">console.cpp:60</span></div>
+    <div class="row"><span class="lab">现状</span><span class="body">旧控制台（conhost）在 65001 下读中文 IME 输入会错位，导致 add 的中文写坏（已通过记事本编辑 csv 绕开）。</span></div>
+    <div class="row"><span class="lab">建议</span><span class="body">长期方案：Windows Terminal 运行，或程序改用宽字符输入（<code>wcin</code>/<code>_getws</code>）。不影响功能主线。</span></div>
+  </div>
+
+  <!-- ===== 分文件 ===== -->
+  <h2>二、分文件健康度</h2>
+  <table>
+    <colgroup><col><col><col><col></colgroup>
+    <tr><th>文件</th><th>问题数</th><th>最高级</th><th>主要问题</th></tr>
+    <tr><td class="mono">wordbank.cpp</td><td>3</td><td><span class="dot" style="background:var(--p0)"></span>P0</td><td>parseLine 崩溃风险、BOM 未处理、返回值被忽略</td></tr>
+    <tr><td class="mono">console.cpp</td><td>3</td><td><span class="dot" style="background:var(--p1)"></span>P1</td><td>remove 不能删词组、路径重复、中文输入环境问题</td></tr>
+    <tr><td class="mono">ui.cpp</td><td>3</td><td><span class="dot" style="background:var(--p1)"></span>P1</td><td>字体未释放、字库路径硬编码、loadWords 未检查</td></tr>
+    <tr><td class="mono">word_trainer.cpp</td><td>1</td><td><span class="dot" style="background:var(--p1)"></span>P1</td><td>未知参数静默退出</td></tr>
+    <tr><td class="mono">word.h</td><td>1</td><td><span class="dot" style="background:var(--p2)"></span>P2</td><td>头文件 using namespace std</td></tr>
+    <tr><td class="mono">wordbank.h</td><td>1</td><td><span class="dot" style="background:var(--p2)"></span>P2</td><td>头文件不自给自足</td></tr>
+    <tr><td class="mono">CMakeLists.txt</td><td>1</td><td><span class="dot" style="background:var(--p2)"></span>P2</td><td>双 csv 不同步</td></tr>
+    <tr><td class="mono">date_util.cpp</td><td>0</td><td><span class="dot" style="background:#2F6B4F"></span>通过</td><td>—</td></tr>
+    <tr><td class="mono">path_util.cpp</td><td>0</td><td><span class="dot" style="background:#2F6B4F"></span>通过</td><td>—</td></tr>
+  </table>
+
+  <!-- ===== 亮点 ===== -->
+  <h2>三、做得好的地方（保持）</h2>
+  <div class="good">
+    <div class="gtitle">due 下标清单，不存拷贝</div>
+    <p>过滤结果存 <code>vector&lt;int&gt;</code> 下标、操作走 <code>words[due[index]]</code>——改的是原件，写回不丢。这是 V1.5 踩坑换来的正确模式。</p>
+  </div>
+  <div class="good">
+    <div class="gtitle">答完即移除 + 防越界顺序</div>
+    <p><code>erase</code> 后先查空再防越界，顺序正确；单卡不卡死、删末尾不崩——V1.5 打磨出来的边界处理。</p>
+  </div>
+  <div class="good">
+    <div class="gtitle">进度条用总量差</div>
+    <p><code>1 - 剩余/总数</code> 而非"位置/当前大小"——动态删除集合下统计正确。</p>
+  </div>
+  <div class="good">
+    <div class="gtitle">间隔重复闭环完整</div>
+    <p>到期过滤 → 背 → lastSeen 更新 / N 清零 right → 明天重新算到期，规则干净，依赖方向正确（数据层 → 工具层）。</p>
+  </div>
+  <div class="good">
+    <div class="gtitle">模块分层清晰</div>
+    <p>ui / console / wordbank / date_util / path_util 各管一摊，main 只做门卫分发——V2.0 加 quiz 只需要再挂一个模块。</p>
+  </div>
+
+  <!-- ===== 路线图 ===== -->
+  <h2>四、建议修复顺序</h2>
+  <ol class="road">
+    <li><div class="rt">修 P0：parseLine 健壮性 + BOM + 返回值检查</div><div class="rd">30 分钟，把"会崩"变成"不会崩"。改完用空行、脏行、带 BOM 的 csv 各测一遍。</div></li>
+    <li><div class="rt">修 P1：remove 换 getline、未知参数提示、UnloadFont、字库路径随程序</div><div class="rd">功能缺陷清零。字库路径建议用 cppDir() 拼，和 words.csv 同待遇。</div></li>
+    <li><div class="rt">修 P2：头文件规范化、csvPath 抽公共函数、CMake 双 csv 决策</div><div class="rd">把工程做成"教科书级"规范，为 V2.0 打地基。</div></li>
+    <li><div class="rt">开始 V2.0：--quiz 答题模式</div><div class="rd">地基稳了再盖楼。新文件记得登记进 CMakeLists。</div></li>
+  </ol>
+
+  <div class="foot">
+    <span>本报告基于 2026-09-30 磁盘源码静态审查</span>
+    <span>未改动任何项目文件</span>
+    <span>共 8 源文件 + CMake + csv</span>
+  </div>
+
+</div>
+</body>
+</html>
