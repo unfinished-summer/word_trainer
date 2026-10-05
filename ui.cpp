@@ -14,7 +14,12 @@ using namespace std;
 int playMode() {
 	vector<Word> words;
 	string csvPath = (fs::path(cppDir()) / "words.csv").string();
-	loadWords(csvPath, words);
+
+	if (!loadWords(csvPath, words)) {            // ← 读取失败要拦！
+		cout << "词库文件读取失败：" << csvPath << endl;
+		return 1;                                 // 打不开就别开窗口
+	}
+
 	vector<int> due;                     // 今天该背的【下标清单】
 	for (int i = 0; i < (int)words.size(); i++) {
 		if (shouldReview(words[i])) {
@@ -101,7 +106,12 @@ int playMode() {
 	if (due.empty()) {
 		cout << "今天的词全部背完，明天见" << endl;
 	}
-	saveWords(csvPath, words);
+
+	if (!saveWords(csvPath, words)) {
+		cout << "保存失败（磁盘满或文件只读）" << endl;
+		return 1;
+	}
+
 	CloseWindow();
 	return 0;
 }

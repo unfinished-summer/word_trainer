@@ -16,7 +16,10 @@ int manageMode() {
     vector<Word> words;
     string csvPath = (fs::path(cppDir()) / "words.csv").string();
 
-    loadWords(csvPath, words);
+    if (!loadWords(csvPath, words)) {            // ← 读取失败要拦！
+        cout << "词库文件读取失败：" << csvPath << endl;
+        return 1;
+    }
 
     while (true) {
         cout << "> ";
@@ -93,6 +96,10 @@ int manageMode() {
 
     }
 
-    saveWords(csvPath, words);
+    if (!saveWords(csvPath, words)) {
+        cout << "保存失败（磁盘满或文件只读）" << endl;
+        return 1;
+    }
+
     return 0;
 }
