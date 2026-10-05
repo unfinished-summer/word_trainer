@@ -20,9 +20,6 @@ add_executable(word-trainer
     path_util.cpp
 )
 
-# 把词库复制到构建目录（exe 旁边），程序按 exe 目录找 words.csv
-configure_file(words.csv ${CMAKE_CURRENT_BINARY_DIR}/words.csv COPYONLY)
-
 # raylib：V2.0 图形界面依赖。
 # 不用 vcpkg（已知问题），改用 FetchContent 拉官方源码编译。
 include(FetchContent)
@@ -34,3 +31,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib)
 
 target_link_libraries(word-trainer PRIVATE raylib)
+
+# 定义宏，把源码目录传进程序
+target_compile_definitions(word-trainer PRIVATE PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
